@@ -7,6 +7,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
+  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -112,14 +113,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarRail />
       </Sidebar>
 
-      <main className="flex-1 flex flex-col min-h-screen">
-        <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 py-3 md:hidden">
-          <SidebarTrigger />
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 py-2 md:px-4">
+          <SidebarTrigger className="-ml-1" />
         </header>
         <div className="flex-1 overflow-auto">
           {children}
         </div>
-      </main>
+      </SidebarInset>
     </SidebarProvider>
   );
 }
