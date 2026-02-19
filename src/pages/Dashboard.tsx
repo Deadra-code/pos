@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table';
 import { transactionsDb, productsDb } from '@/db/operations';
 import type { Transaction } from '@/db';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   ShoppingBag,
   Utensils,
@@ -29,6 +30,7 @@ export default function Dashboard() {
   const [availableProducts, setAvailableProducts] = useState(0);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [topItems, setTopItems] = useState<{ name: string; qty: number }[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadDashboardData();
@@ -68,6 +70,7 @@ export default function Dashboard() {
     const products = await productsDb.getAll();
     setTotalProducts(products.length);
     setAvailableProducts(products.filter((p) => p.is_available).length);
+    setLoading(false);
   };
 
   const quickActions = [
@@ -94,17 +97,38 @@ export default function Dashboard() {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="p-6 md:p-8 space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-[300px] rounded-xl" />
+          <Skeleton className="h-[300px] rounded-xl" />
+        </div>
+        <Skeleton className="h-[300px] rounded-xl" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 md:p-8 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
             Ringkasan aktivitas warung Anda hari ini
           </p>
         </div>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           {new Date().toLocaleDateString('id-ID', {
             weekday: 'long',
             year: 'numeric',
@@ -122,7 +146,7 @@ export default function Dashboard() {
               <DollarSign className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Omzet Hari Ini</p>
+              <p className="text-sm text-muted-foreground">Omzet Hari Ini</p>
               <p className="text-2xl font-bold">
                 Rp {todayRevenue.toLocaleString('id-ID')}
               </p>
@@ -136,7 +160,7 @@ export default function Dashboard() {
               <ShoppingBag className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Transaksi</p>
+              <p className="text-sm text-muted-foreground">Transaksi</p>
               <p className="text-2xl font-bold">{todayTransactions}</p>
             </div>
           </CardContent>
@@ -148,7 +172,7 @@ export default function Dashboard() {
               <Utensils className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Menu Tersedia</p>
+              <p className="text-sm text-muted-foreground">Menu Tersedia</p>
               <p className="text-2xl font-bold">
                 {availableProducts} / {totalProducts}
               </p>
@@ -162,7 +186,7 @@ export default function Dashboard() {
               <TrendingUp className="w-6 h-6 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Rata-rata / Transaksi</p>
+              <p className="text-sm text-muted-foreground">Rata-rata / Transaksi</p>
               <p className="text-2xl font-bold">
                 {todayTransactions > 0
                   ? `Rp ${Math.round(todayRevenue / todayTransactions).toLocaleString('id-ID')}`
@@ -187,15 +211,15 @@ export default function Dashboard() {
             <div className="space-y-3">
               {quickActions.map((action) => (
                 <Link key={action.title} to={action.link}>
-                  <div className="flex items-center gap-4 p-4 rounded-lg border hover:bg-gray-50 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer">
                     <div className={`p-2 rounded-lg ${action.color}`}>
                       <action.icon className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1">
                       <p className="font-medium">{action.title}</p>
-                      <p className="text-sm text-gray-600">{action.description}</p>
+                      <p className="text-sm text-muted-foreground">{action.description}</p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                    <ChevronRight className="w-5 h-5 text-muted-foreground/50" />
                   </div>
                 </Link>
               ))}
@@ -213,7 +237,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             {topItems.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">
+              <p className="text-center text-muted-foreground py-8">
                 Belum ada transaksi hari ini
               </p>
             ) : (
@@ -262,7 +286,7 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent>
           {recentTransactions.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">
+            <p className="text-center text-muted-foreground py-8">
               Belum ada transaksi
             </p>
           ) : (
@@ -290,11 +314,10 @@ export default function Dashboard() {
                       </TableCell>
                       <TableCell>
                         <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            t.payment_method === 'TUNAI'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-blue-100 text-blue-800'
-                          }`}
+                          className={`px-2 py-1 rounded text-xs font-medium ${t.payment_method === 'TUNAI'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-blue-100 text-blue-800'
+                            }`}
                         >
                           {t.payment_method}
                         </span>

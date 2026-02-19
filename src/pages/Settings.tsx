@@ -124,8 +124,8 @@ export default function Settings() {
     <div className="flex-1 p-4 md:p-8 overflow-auto">
       <div className="max-w-4xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Pengaturan</h1>
-          <p className="text-gray-600 mt-1">Konfigurasi aplikasi dan manajemen data</p>
+          <h1 className="text-3xl font-bold text-foreground">Pengaturan</h1>
+          <p className="text-muted-foreground mt-1">Konfigurasi aplikasi dan manajemen data</p>
         </header>
 
         <div className="space-y-6">
@@ -176,7 +176,7 @@ export default function Settings() {
                 <Card>
                   <CardContent className="pt-6">
                     <h3 className="font-semibold mb-2">Export Data</h3>
-                    <p className="text-sm text-gray-600 mb-4">
+                    <p className="text-sm text-muted-foreground mb-4">
                       Download semua data menu dan riwayat transaksi sebagai file JSON.
                     </p>
                     <Button onClick={handleExport} className="w-full">
@@ -189,7 +189,7 @@ export default function Settings() {
                 <Card>
                   <CardContent className="pt-6">
                     <h3 className="font-semibold mb-2">Import Data</h3>
-                    <p className="text-sm text-gray-600 mb-4">
+                    <p className="text-sm text-muted-foreground mb-4">
                       Restore data dari file backup JSON yang pernah di-export.
                     </p>
                     <div className="relative">
@@ -216,7 +216,7 @@ export default function Settings() {
                   <div className="flex-1">
                     <h4 className="font-medium text-red-800">Reset Data</h4>
                     <p className="text-sm text-red-600 mt-1">
-                      Hapus semua data dan kembalikan aplikasi ke pengaturan awal. 
+                      Hapus semua data dan kembalikan aplikasi ke pengaturan awal.
                       Pastikan sudah melakukan backup sebelum mereset!
                     </p>
                   </div>
@@ -236,19 +236,19 @@ export default function Settings() {
             <CardContent>
               <dl className="grid gap-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-gray-600">Versi</dt>
+                  <dt className="text-muted-foreground">Versi</dt>
                   <dd className="font-medium">1.0 (Warung Makan Edition)</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-gray-600">Platform</dt>
+                  <dt className="text-muted-foreground">Platform</dt>
                   <dd className="font-medium">PWA Standalone</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-gray-600">Database</dt>
+                  <dt className="text-muted-foreground">Database</dt>
                   <dd className="font-medium">IndexedDB (Local Storage)</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-gray-600">Hosting</dt>
+                  <dt className="text-muted-foreground">Hosting</dt>
                   <dd className="font-medium">GitHub Pages</dd>
                 </div>
               </dl>

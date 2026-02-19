@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import {
   Sidebar,
   SidebarContent,
@@ -13,7 +14,7 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Home, ShoppingBag, Utensils, Receipt, Settings } from 'lucide-react';
+import { Home, ShoppingBag, Utensils, Receipt, Settings, Moon, Sun } from 'lucide-react';
 
 const menuItems = [
   {
@@ -45,6 +46,7 @@ const menuItems = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const { theme, setTheme } = useTheme();
 
   return (
     <SidebarProvider>
@@ -88,6 +90,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarContent>
 
         <SidebarFooter className="border-t border-sidebar-border">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                tooltip="Ganti Tema"
+              >
+                <Sun className="h-4 w-4 dark:hidden" />
+                <Moon className="h-4 w-4 hidden dark:block" />
+                <span>Ganti Tema</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
           <div className="p-2 group-data-[collapsible=icon]:hidden">
             <p className="text-xs text-muted-foreground text-center">
               Warung Makan Edition
@@ -98,9 +112,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarRail />
       </Sidebar>
 
-      <SidebarTrigger className="absolute top-3 left-3 z-50" />
-
       <main className="flex-1 flex flex-col min-h-screen">
+        <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 py-3 md:hidden">
+          <SidebarTrigger />
+        </header>
         <div className="flex-1 overflow-auto">
           {children}
         </div>

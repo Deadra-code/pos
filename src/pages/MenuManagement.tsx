@@ -145,8 +145,8 @@ export default function MenuManagement() {
       <div className="max-w-6xl mx-auto">
         <header className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Manajemen Menu</h1>
-            <p className="text-gray-600 mt-1">Kelola daftar menu warung Anda</p>
+            <h1 className="text-3xl font-bold text-foreground">Manajemen Menu</h1>
+            <p className="text-muted-foreground mt-1">Kelola daftar menu warung Anda</p>
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
@@ -294,12 +294,12 @@ export default function MenuManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border">
+            <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nama</TableHead>
-                    <TableHead>Kategori</TableHead>
+                    <TableHead className="hidden sm:table-cell">Kategori</TableHead>
                     <TableHead>Harga</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
@@ -308,7 +308,7 @@ export default function MenuManagement() {
                 <TableBody>
                   {products.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                         Belum ada menu. Klik "Tambah Menu" untuk memulai.
                       </TableCell>
                     </TableRow>
@@ -316,7 +316,7 @@ export default function MenuManagement() {
                     products.map((product) => (
                       <TableRow key={product.id}>
                         <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>{product.category}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{product.category}</TableCell>
                         <TableCell>
                           {editingPriceId === product.id ? (
                             <Input

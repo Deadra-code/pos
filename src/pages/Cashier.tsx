@@ -25,7 +25,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { productsDb, transactionsDb } from '@/db/operations';
 import type { Product, TransactionItem } from '@/db';
-import { ShoppingBag, Plus, Minus, Trash2, CreditCard, QrCode, Banknote } from 'lucide-react';
+import {
+  ShoppingBag, Plus, Minus, Trash2, CreditCard, QrCode, Banknote,
+  MessageSquare
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CartItem extends TransactionItem {
@@ -102,10 +105,20 @@ export default function Cashier() {
   const totalAmount = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
   const handleProductClick = (product: Product) => {
+    addToCart(product);
+    toast.success(`${product.name} masuk keranjang`, {
+      position: 'bottom-center',
+      duration: 1000,
+    });
+  };
+
+  const handleProductNote = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
     setSelectedProduct(product);
     setNote('');
     setIsNoteDialogOpen(true);
   };
+
 
   const handleAddWithNote = () => {
     if (selectedProduct) {
@@ -175,7 +188,7 @@ export default function Cashier() {
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1">
         {cart.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             <ShoppingBag className="w-12 h-12 mx-auto mb-2 opacity-50" />
             <p>Keranjang kosong</p>
           </div>
@@ -188,9 +201,9 @@ export default function Cashier() {
                     <div className="flex-1">
                       <p className="font-medium">{item.product_name}</p>
                       {item.note && (
-                        <p className="text-xs text-gray-500">Catatan: {item.note}</p>
+                        <p className="text-xs text-muted-foreground">Catatan: {item.note}</p>
                       )}
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         {item.qty} x Rp {item.price.toLocaleString('id-ID')}
                       </p>
                     </div>
@@ -280,7 +293,7 @@ export default function Cashier() {
           </DialogHeader>
 
           <div className="py-4">
-            <div className="flex justify-between items-center mb-6 p-4 bg-gray-100 rounded-lg">
+            <div className="flex justify-between items-center mb-6 p-4 bg-muted rounded-lg">
               <span className="font-semibold">Total Tagihan</span>
               <span className="text-2xl font-bold">Rp {totalAmount.toLocaleString('id-ID')}</span>
             </div>
@@ -358,8 +371,8 @@ export default function Cashier() {
 
             {paymentMethod === 'QRIS' && (
               <div className="text-center py-4">
-                <QrCode className="w-16 h-16 mx-auto mb-2 text-gray-400" />
-                <p className="text-sm text-gray-600">
+                <QrCode className="w-16 h-16 mx-auto mb-2 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground">
                   Pastikan pembayaran QRIS sudah diverifikasi secara visual.
                 </p>
               </div>
@@ -381,8 +394,8 @@ export default function Cashier() {
         {/* Left: Menu Section */}
         <div className="flex-1 p-4 overflow-auto">
           <header className="mb-4">
-            <h1 className="text-2xl font-bold text-gray-900">Kasir</h1>
-            <p className="text-gray-600">Pilih menu untuk pesanan</p>
+            <h1 className="text-2xl font-bold text-foreground">Kasir</h1>
+            <p className="text-muted-foreground">Pilih menu untuk pesanan</p>
           </header>
 
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -400,7 +413,7 @@ export default function Cashier() {
                 {filteredProducts.map((product) => (
                   <Card
                     key={product.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    className="cursor-pointer hover:bg-muted/50 transition-colors relative group"
                     onClick={() => handleProductClick(product)}
                   >
                     <CardContent className="p-3">
@@ -408,6 +421,15 @@ export default function Cashier() {
                       <p className="text-blue-600 font-semibold mt-1">
                         Rp {product.price.toLocaleString('id-ID')}
                       </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => handleProductNote(e, product)}
+                        title="Tambah Catatan"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}

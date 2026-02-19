@@ -9,11 +9,15 @@ import { seedDatabase } from './db/seed'
 // Seed database on first load
 seedDatabase();
 
+import { ThemeProvider } from 'next-themes'
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <HashRouter>
-      <App />
-      <Toaster position="top-right" richColors />
-    </HashRouter>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <HashRouter>
+        <App />
+        <Toaster position="top-right" richColors />
+      </HashRouter>
+    </ThemeProvider>
   </StrictMode>,
 )

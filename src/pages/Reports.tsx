@@ -28,7 +28,13 @@ import {
   Cell,
 } from 'recharts';
 
-const COLORS = ['#3b82f6', '#22c55e'];
+const COLORS = [
+  'var(--color-chart-1)',
+  'var(--color-chart-2)',
+  'var(--color-chart-3)',
+  'var(--color-chart-4)',
+  'var(--color-chart-5)',
+];
 
 export default function Reports() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -166,7 +172,7 @@ export default function Reports() {
           <Icon className="w-6 h-6 text-white" />
         </div>
         <div>
-          <p className="text-sm text-gray-600">{title}</p>
+          <p className="text-sm text-muted-foreground">{title}</p>
           <p className="text-2xl font-bold">{value}</p>
         </div>
       </CardContent>
@@ -178,8 +184,8 @@ export default function Reports() {
       <div className="max-w-7xl mx-auto">
         <header className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Laporan</h1>
-            <p className="text-gray-600 mt-1">Analisis penjualan warung Anda</p>
+            <h1 className="text-3xl font-bold text-foreground">Laporan</h1>
+            <p className="text-muted-foreground mt-1">Analisis penjualan warung Anda</p>
           </div>
           <Button variant="outline" onClick={exportData}>
             <Download className="w-4 h-4 mr-2" />
@@ -284,7 +290,7 @@ export default function Reports() {
               <p className="text-3xl font-bold text-green-600">
                 Rp {cashTotal.toLocaleString('id-ID')}
               </p>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-muted-foreground mt-2">
                 Uang fisik yang harus ada di laci kasir
               </p>
             </CardContent>
@@ -301,7 +307,7 @@ export default function Reports() {
               <p className="text-3xl font-bold text-blue-600">
                 Rp {qrisTotal.toLocaleString('id-ID')}
               </p>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-muted-foreground mt-2">
                 Uang yang masuk ke rekening/e-wallet
               </p>
             </CardContent>
@@ -321,7 +327,7 @@ export default function Reports() {
                   <XAxis dataKey="hour" />
                   <YAxis />
                   <Tooltip formatter={(value: number | undefined) => `Rp ${(value || 0).toLocaleString('id-ID')}`} />
-                  <Bar dataKey="sales" fill="#3b82f6" />
+                  <Bar dataKey="sales" fill="var(--color-chart-1)" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -373,7 +379,7 @@ export default function Reports() {
                 <TableBody>
                   {topItemsByQty.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center py-4 text-gray-500">
+                      <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
                         Belum ada data
                       </TableCell>
                     </TableRow>
@@ -407,7 +413,7 @@ export default function Reports() {
                 <TableBody>
                   {topItemsByRevenue.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center py-4 text-gray-500">
+                      <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
                         Belum ada data
                       </TableCell>
                     </TableRow>
@@ -447,7 +453,7 @@ export default function Reports() {
                 <TableBody>
                   {filteredTransactions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-4 text-gray-500">
+                      <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
                         Tidak ada transaksi pada periode ini
                       </TableCell>
                     </TableRow>
@@ -459,11 +465,10 @@ export default function Reports() {
                           {new Date(t.timestamp).toLocaleString('id-ID')}
                         </TableCell>
                         <TableCell>
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            t.payment_method === 'TUNAI'
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${t.payment_method === 'TUNAI'
                               ? 'bg-green-100 text-green-800'
                               : 'bg-blue-100 text-blue-800'
-                          }`}>
+                            }`}>
                             {t.payment_method}
                           </span>
                         </TableCell>
