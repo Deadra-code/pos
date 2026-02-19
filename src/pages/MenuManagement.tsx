@@ -28,7 +28,9 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Edit, Trash2, Utensils } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Plus, Edit, Trash2, Utensils, CheckCheck, XCircle } from 'lucide-react';
 import { productsDb } from '@/db/operations';
 import type { Product } from '@/db';
 import { toast } from 'sonner';
@@ -41,6 +43,11 @@ export default function MenuManagement() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingPriceId, setEditingPriceId] = useState<number | null>(null);
   const [newPrice, setNewPrice] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -63,6 +70,7 @@ export default function MenuManagement() {
       return;
     }
 
+    setIsSubmitting(true);
     await productsDb.create({
       name: formData.name,
       price: parseFloat(formData.price),
@@ -74,12 +82,14 @@ export default function MenuManagement() {
     toast.success('Menu berhasil ditambahkan');
     setFormData({ name: '', price: '', category: '' });
     setIsAddDialogOpen(false);
+    setIsSubmitting(false);
     loadProducts();
   };
 
   const handleUpdateProduct = async () => {
     if (!editingProduct) return;
 
+    setIsSubmitting(true);
     await productsDb.update(editingProduct.id!, {
       name: formData.name,
       price: parseFloat(formData.price),
@@ -89,14 +99,21 @@ export default function MenuManagement() {
     toast.success('Menu berhasil diupdate');
     setEditingProduct(null);
     setFormData({ name: '', price: '', category: '' });
+    setIsSubmitting(false);
     loadProducts();
   };
 
   const handleDeleteProduct = async (id: number) => {
-    if (confirm('Yakin ingin menghapus menu ini?')) {
-      await productsDb.delete(id);
+    setProductToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteProduct = async () => {
+    if (productToDelete !== null) {
+      await productsDb.delete(productToDelete);
       toast.success('Menu berhasil dihapus');
       loadProducts();
+      setProductToDelete(null);
     }
   };
 
@@ -140,21 +157,121 @@ export default function MenuManagement() {
     });
   };
 
+  // Bulk Actions
+  const toggleSelectProduct = (id: number) => {
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedProducts(newSelected);
+    setSelectAll(newSelected.size === products.length);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectedProducts(new Set());
+      setSelectAll(false);
+    } else {
+      setSelectedProducts(new Set(products.map((p) => p.id!).filter(Boolean)));
+      setSelectAll(true);
+    }
+  };
+
+  const handleBulkAvailability = async (available: boolean) => {
+    if (selectedProducts.size === 0) {
+      toast.error('Pilih menu terlebih dahulu');
+      return;
+    }
+
+    setIsSubmitting(true);
+    for (const id of selectedProducts) {
+      const product = await productsDb.getById(id);
+      if (product && product.is_available !== available) {
+        await productsDb.update(id, { is_available: available });
+      }
+    }
+    toast.success(`${selectedProducts.size} menu diupdate`);
+    setSelectedProducts(new Set());
+    setSelectAll(false);
+    setIsSubmitting(false);
+    loadProducts();
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedProducts.size === 0) {
+      toast.error('Pilih menu terlebih dahulu');
+      return;
+    }
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    setIsSubmitting(true);
+    for (const id of selectedProducts) {
+      await productsDb.delete(id);
+    }
+    toast.success(`${selectedProducts.size} menu dihapus`);
+    setSelectedProducts(new Set());
+    setSelectAll(false);
+    setIsSubmitting(false);
+    setProductToDelete(null);
+    loadProducts();
+  };
+
   return (
-    <div className="flex-1 p-4 md:p-8 overflow-auto">
-      <div className="max-w-6xl mx-auto">
-        <header className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Manajemen Menu</h1>
-            <p className="text-muted-foreground mt-1">Kelola daftar menu warung Anda</p>
-          </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Tambah Menu
-              </Button>
-            </DialogTrigger>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Manajemen Menu</h1>
+          <p className="text-muted-foreground mt-1">Kelola daftar menu warung Anda</p>
+        </div>
+          <div className="flex gap-2">
+            {selectedProducts.size > 0 && (
+              <div className="flex items-center gap-2 mr-2">
+                <span className="text-sm text-muted-foreground">
+                  {selectedProducts.size} terpilih
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAvailability(true)}
+                  disabled={isSubmitting}
+                  title="Tandai tersedia"
+                >
+                  <CheckCheck className="w-4 h-4 mr-1" />
+                  Ada
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAvailability(false)}
+                  disabled={isSubmitting}
+                  title="Tandai habis"
+                >
+                  <XCircle className="w-4 h-4 mr-1" />
+                  Habis
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={isSubmitting}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Hapus
+                </Button>
+              </div>
+            )}
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button aria-label="Add new menu item">
+                  <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
+                  <span className="hidden sm:inline">Tambah Menu</span>
+                  <span className="sm:hidden">Tambah</span>
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Tambah Menu Baru</DialogTitle>
@@ -211,171 +328,210 @@ export default function MenuManagement() {
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Batal
                 </Button>
-                <Button onClick={handleAddProduct}>Simpan</Button>
+                <Button onClick={handleAddProduct} disabled={isSubmitting}>
+                  {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </header>
+        </div>
+      </div>
 
-        {/* Edit Dialog */}
-        <Dialog
-          open={!!editingProduct}
-          onOpenChange={(open) => {
-            if (!open) {
-              setEditingProduct(null);
-              setFormData({ name: '', price: '', category: '' });
-            }
-          }}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Menu</DialogTitle>
-              <DialogDescription>
-                Update informasi menu.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-name">Nama Menu</Label>
-                <Input
-                  id="edit-name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-price">Harga (Rp)</Label>
-                <Input
-                  id="edit-price"
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-category">Kategori</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, category: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      {/* Edit Dialog */}
+      <Dialog
+        open={!!editingProduct}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingProduct(null);
+            setFormData({ name: '', price: '', category: '' });
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Menu</DialogTitle>
+            <DialogDescription>
+              Update informasi menu.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-name">Nama Menu</Label>
+              <Input
+                id="edit-name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingProduct(null)}>
-                Batal
-              </Button>
-              <Button onClick={handleUpdateProduct}>Update</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-price">Harga (Rp)</Label>
+              <Input
+                id="edit-price"
+                type="number"
+                value={formData.price}
+                onChange={(e) =>
+                  setFormData({ ...formData, price: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-category">Kategori</Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, category: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingProduct(null)}>
+              Batal
+            </Button>
+            <Button onClick={handleUpdateProduct} disabled={isSubmitting}>
+              {isSubmitting ? 'Mengupdate...' : 'Update'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Utensils className="w-5 h-5" />
-              Daftar Menu ({products.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
-                <TableHeader>
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title={selectedProducts.size > 0 ? 'Hapus Menu Bulk' : 'Hapus Menu'}
+        description={
+          selectedProducts.size > 0
+            ? `Apakah Anda yakin ingin menghapus ${selectedProducts.size} menu yang terpilih? Tindakan ini tidak dapat dibatalkan.`
+            : 'Apakah Anda yakin ingin menghapus menu ini? Tindakan ini tidak dapat dibatalkan.'
+        }
+        onConfirm={selectedProducts.size > 0 ? confirmBulkDelete : confirmDeleteProduct}
+        confirmText="Hapus"
+        variant="destructive"
+        isLoading={isSubmitting}
+      />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Utensils className="w-5 h-5" />
+            Daftar Menu ({products.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectAll && products.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all products"
+                    />
+                  </TableHead>
+                  <TableHead>Nama</TableHead>
+                  <TableHead className="hidden sm:table-cell">Kategori</TableHead>
+                  <TableHead>Harga</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {products.length === 0 ? (
                   <TableRow>
-                    <TableHead>Nama</TableHead>
-                    <TableHead className="hidden sm:table-cell">Kategori</TableHead>
-                    <TableHead>Harga</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Aksi</TableHead>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      Belum ada menu. Klik "Tambah Menu" untuk memulai.
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        Belum ada menu. Klik "Tambah Menu" untuk memulai.
+                ) : (
+                  products.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedProducts.has(product.id!)}
+                          onCheckedChange={() => toggleSelectProduct(product.id!)}
+                          aria-label={`Select ${product.name}`}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{product.category}</TableCell>
+                      <TableCell>
+                        {editingPriceId === product.id ? (
+                          <Input
+                            type="number"
+                            value={newPrice}
+                            onChange={(e) => setNewPrice(e.target.value)}
+                            onBlur={() => handleSavePrice(product.id!)}
+                            onKeyDown={(e) => handlePriceKeyDown(e, product.id!)}
+                            className="w-24 h-8"
+                            autoFocus
+                            aria-label={`Edit price for ${product.name}`}
+                          />
+                        ) : (
+                          <span
+                            className="cursor-pointer hover:text-primary hover:underline"
+                            onClick={() => handleQuickPriceEdit(product)}
+                            aria-label={`Edit price for ${product.name}, current price: Rp ${product.price.toLocaleString('id-ID')}`}
+                          >
+                            Rp {product.price.toLocaleString('id-ID')}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={product.is_available ? 'default' : 'secondary'}>
+                          {product.is_available ? 'Tersedia' : 'Habis'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleToggleAvailability(product.id!)}
+                            aria-label={product.is_available ? `Mark ${product.name} as unavailable` : `Mark ${product.name} as available`}
+                          >
+                            {product.is_available ? 'Habis' : 'Ada'}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(product)}
+                            aria-label={`Edit ${product.name}`}
+                          >
+                            <Edit className="w-4 h-4" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteProduct(product.id!)}
+                            aria-label={`Delete ${product.name}`}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" aria-hidden="true" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    products.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell className="hidden sm:table-cell">{product.category}</TableCell>
-                        <TableCell>
-                          {editingPriceId === product.id ? (
-                            <Input
-                              type="number"
-                              value={newPrice}
-                              onChange={(e) => setNewPrice(e.target.value)}
-                              onBlur={() => handleSavePrice(product.id!)}
-                              onKeyDown={(e) => handlePriceKeyDown(e, product.id!)}
-                              className="w-24 h-8"
-                              autoFocus
-                            />
-                          ) : (
-                            <span
-                              className="cursor-pointer hover:text-primary hover:underline"
-                              onClick={() => handleQuickPriceEdit(product)}
-                            >
-                              Rp {product.price.toLocaleString('id-ID')}
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={product.is_available ? 'default' : 'secondary'}>
-                            {product.is_available ? 'Tersedia' : 'Habis'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleToggleAvailability(product.id!)}
-                            >
-                              {product.is_available ? 'Habis' : 'Ada'}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openEditDialog(product)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteProduct(product.id!)}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-600" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

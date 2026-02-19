@@ -15,6 +15,7 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
+import { SkipLink } from '@/components/ui/skip-link';
 import { Home, ShoppingBag, Utensils, Receipt, Settings, Moon, Sun } from 'lucide-react';
 
 const menuItems = [
@@ -51,6 +52,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
+      <SkipLink />
       <Sidebar collapsible="icon" variant="sidebar">
         <SidebarHeader className="border-b border-sidebar-border">
           <div className="flex items-center gap-2 px-2 py-4">
@@ -76,10 +78,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         asChild
                         isActive={isActive}
                         tooltip={item.title}
+                        aria-label={`Navigate to ${item.title}`}
+                        aria-current={isActive ? 'page' : undefined}
                       >
                         <Link to={item.link}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
+                          <item.icon className="h-4 w-4" aria-hidden="true" />
+                          <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -96,10 +100,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                 tooltip="Ganti Tema"
+                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
               >
-                <Sun className="h-4 w-4 dark:hidden" />
-                <Moon className="h-4 w-4 hidden dark:block" />
-                <span>Ganti Tema</span>
+                <Sun className="h-4 w-4 dark:hidden" aria-hidden="true" />
+                <Moon className="h-4 w-4 hidden dark:block" aria-hidden="true" />
+                <span className="group-data-[collapsible=icon]:hidden">Ganti Tema</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -116,10 +121,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <SidebarInset>
         <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 py-2 md:px-4">
           <SidebarTrigger className="-ml-1" />
+          <span className="sr-only">Toggle Sidebar</span>
         </header>
-        <div className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
           {children}
-        </div>
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

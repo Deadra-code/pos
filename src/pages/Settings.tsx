@@ -3,15 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { db } from '@/db';
 import { settingsDb, productsDb, transactionsDb } from '@/db/operations';
-import { Download, Save, RotateCcw } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Download, Save, RotateCcw, Plus, Trash2, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Settings() {
   const [storeName, setStoreName] = useState('');
   const [footerStruk, setFooterStruk] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [newCategory, setNewCategory] = useState('');
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [editCategoryValue, setEditCategoryValue] = useState('');
 
   useEffect(() => {
     loadSettings();
@@ -22,12 +30,73 @@ export default function Settings() {
     const footer = await settingsDb.get('footer_struk');
     setStoreName((name as string) || 'WarungPOS');
     setFooterStruk((footer as string) || 'Terima kasih atas kunjungan Anda!');
+    loadCategories();
+  };
+
+  const loadCategories = async () => {
+    const products = await productsDb.getAll();
+    const uniqueCategories = Array.from(new Set(products.map((p) => p.category)));
+    setCategories(uniqueCategories);
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategory.trim()) {
+      toast.error('Nama kategori tidak boleh kosong');
+      return;
+    }
+    if (categories.includes(newCategory.trim())) {
+      toast.error('Kategori sudah ada');
+      return;
+    }
+    setCategories([...categories, newCategory.trim()]);
+    setNewCategory('');
+    toast.success('Kategori berhasil ditambahkan');
+  };
+
+  const handleEditCategory = (category: string) => {
+    setEditingCategory(category);
+    setEditCategoryValue(category);
+  };
+
+  const handleSaveCategory = async () => {
+    if (!editCategoryValue.trim()) {
+      toast.error('Nama kategori tidak boleh kosong');
+      return;
+    }
+    if (editCategoryValue.trim() !== editingCategory && categories.includes(editCategoryValue.trim())) {
+      toast.error('Kategori sudah ada');
+      return;
+    }
+    // Update all products with this category
+    const products = await productsDb.getAll();
+    for (const product of products) {
+      if (product.category === editingCategory) {
+        await productsDb.update(product.id!, { category: editCategoryValue.trim() });
+      }
+    }
+    setCategories(categories.map((c) => (c === editingCategory ? editCategoryValue.trim() : c)));
+    setEditingCategory(null);
+    setEditCategoryValue('');
+    toast.success('Kategori berhasil diupdate');
+  };
+
+  const handleDeleteCategory = async (category: string) => {
+    const products = await productsDb.getAll();
+    const productsInCategory = products.filter((p) => p.category === category);
+    if (productsInCategory.length > 0) {
+      toast.error(`Tidak dapat menghapus kategori yang masih memiliki ${productsInCategory.length} produk`);
+      return;
+    }
+    setCategories(categories.filter((c) => c !== category));
+    toast.success('Kategori berhasil dihapus');
   };
 
   const handleSaveSettings = async () => {
+    setIsSaving(true);
     await settingsDb.set('store_name', storeName);
     await settingsDb.set('footer_struk', footerStruk);
     toast.success('Pengaturan berhasil disimpan');
+    setIsSaving(false);
   };
 
   const handleExport = async () => {
@@ -108,27 +177,28 @@ export default function Settings() {
   };
 
   const handleReset = async () => {
-    if (confirm('Yakin ingin mereset semua data? Tindakan ini tidak dapat dibatalkan!')) {
-      await db.transaction('rw', db.products, db.transactions, db.settings, async () => {
-        await db.products.clear();
-        await db.transactions.clear();
-        await db.settings.clear();
-      });
-      toast.success('Semua data telah direset');
-      setStoreName('WarungPOS');
-      setFooterStruk('Terima kasih atas kunjungan Anda!');
-    }
+    setResetConfirmOpen(true);
+  };
+
+  const confirmReset = async () => {
+    await db.transaction('rw', db.products, db.transactions, db.settings, async () => {
+      await db.products.clear();
+      await db.transactions.clear();
+      await db.settings.clear();
+    });
+    toast.success('Semua data telah direset');
+    setStoreName('WarungPOS');
+    setFooterStruk('Terima kasih atas kunjungan Anda!');
   };
 
   return (
-    <div className="flex-1 p-4 md:p-8 overflow-auto">
-      <div className="max-w-4xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Pengaturan</h1>
-          <p className="text-muted-foreground mt-1">Konfigurasi aplikasi dan manajemen data</p>
-        </header>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Pengaturan</h1>
+        <p className="text-muted-foreground mt-1">Konfigurasi aplikasi dan manajemen data</p>
+      </div>
 
-        <div className="space-y-6">
+      <div className="space-y-6">
           {/* Store Settings */}
           <Card>
             <CardHeader>
@@ -156,10 +226,105 @@ export default function Settings() {
                   placeholder="Terima kasih atas kunjungan Anda!"
                 />
               </div>
-              <Button onClick={handleSaveSettings}>
+              <Button onClick={handleSaveSettings} disabled={isSaving}>
                 <Save className="w-4 h-4 mr-2" />
-                Simpan Pengaturan
+                {isSaving ? 'Menyimpan...' : 'Simpan Pengaturan'}
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Category Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Manajemen Kategori</CardTitle>
+              <CardDescription>
+                Kelola kategori menu untuk mengorganisir produk Anda
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Nama kategori baru..."
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                  className="flex-1"
+                />
+                <Button onClick={handleAddCategory}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Tambah
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {categories.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Belum ada kategori
+                  </p>
+                ) : (
+                  categories.map((category) => (
+                    <div
+                      key={category}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      {editingCategory === category ? (
+                        <div className="flex items-center gap-2 flex-1">
+                          <Input
+                            value={editCategoryValue}
+                            onChange={(e) => setEditCategoryValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveCategory();
+                              if (e.key === 'Escape') {
+                                setEditingCategory(null);
+                                setEditCategoryValue('');
+                              }
+                            }}
+                            className="flex-1"
+                            autoFocus
+                          />
+                          <Button size="sm" onClick={handleSaveCategory}>
+                            Simpan
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingCategory(null);
+                              setEditCategoryValue('');
+                            }}
+                          >
+                            Batal
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-sm">
+                              {category}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditCategory(category)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteCategory(category)}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -225,6 +390,18 @@ export default function Settings() {
                   </Button>
                 </div>
               </div>
+
+              {/* Reset Confirmation Dialog */}
+              <ConfirmDialog
+                open={resetConfirmOpen}
+                onOpenChange={setResetConfirmOpen}
+                title="Reset Semua Data"
+                description="Apakah Anda yakin ingin mereset semua data? Tindakan ini tidak dapat dibatalkan. Pastikan sudah melakukan backup sebelum mereset!"
+                onConfirm={confirmReset}
+                confirmText="Reset Semua Data"
+                variant="destructive"
+                isLoading={isSaving}
+              />
             </CardContent>
           </Card>
 
@@ -256,6 +433,5 @@ export default function Settings() {
           </Card>
         </div>
       </div>
-    </div>
   );
 }
