@@ -1,0 +1,18 @@
+{
+  "name": "WarungPOS - Point of Sales",
+  "short_name": "WarungPOS",
+  "description": "Sistem Point of Sales untuk Warung Makan",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
