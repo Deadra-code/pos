@@ -142,8 +142,8 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="flex items-center p-6">
-            <div className="p-3 rounded-lg bg-green-100 mr-4">
-              <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/20 mr-4">
+              <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Omzet Hari Ini</p>
@@ -156,8 +156,8 @@ export default function Dashboard() {
 
         <Card>
           <CardContent className="flex items-center p-6">
-            <div className="p-3 rounded-lg bg-blue-100 mr-4">
-              <ShoppingBag className="w-6 h-6 text-blue-600" />
+            <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/20 mr-4">
+              <ShoppingBag className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Transaksi</p>
@@ -168,8 +168,8 @@ export default function Dashboard() {
 
         <Card>
           <CardContent className="flex items-center p-6">
-            <div className="p-3 rounded-lg bg-purple-100 mr-4">
-              <Utensils className="w-6 h-6 text-purple-600" />
+            <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/20 mr-4">
+              <Utensils className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Menu Tersedia</p>
@@ -182,8 +182,8 @@ export default function Dashboard() {
 
         <Card>
           <CardContent className="flex items-center p-6">
-            <div className="p-3 rounded-lg bg-orange-100 mr-4">
-              <TrendingUp className="w-6 h-6 text-orange-600" />
+            <div className="p-3 rounded-lg bg-orange-100 dark:bg-orange-900/20 mr-4">
+              <TrendingUp className="w-6 h-6 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Rata-rata / Transaksi</p>
@@ -255,7 +255,7 @@ export default function Dashboard() {
                       <TableCell className="w-12">{index + 1}</TableCell>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell className="text-right">
-                        <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
+                        <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-sm font-medium">
                           {item.qty}
                         </span>
                       </TableCell>
@@ -315,8 +315,8 @@ export default function Dashboard() {
                       <TableCell>
                         <span
                           className={`px-2 py-1 rounded text-xs font-medium ${t.payment_method === 'TUNAI'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-blue-100 text-blue-800'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
                             }`}
                         >
                           {t.payment_method}

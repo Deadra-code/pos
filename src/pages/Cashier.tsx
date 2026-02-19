@@ -359,9 +359,9 @@ export default function Cashier() {
                 </div>
 
                 {cashReceived && !isNaN(parseFloat(cashReceived)) && (
-                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span className="text-green-800">Kembalian</span>
-                    <span className="text-green-800 font-semibold">
+                  <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                    <span className="text-green-800 dark:text-green-300">Kembalian</span>
+                    <span className="text-green-800 dark:text-green-300 font-semibold">
                       Rp {Math.max(0, parseFloat(cashReceived) - totalAmount).toLocaleString('id-ID')}
                     </span>
                   </div>
@@ -418,7 +418,7 @@ export default function Cashier() {
                   >
                     <CardContent className="p-3">
                       <p className="font-medium text-sm line-clamp-2">{product.name}</p>
-                      <p className="text-blue-600 font-semibold mt-1">
+                      <p className="text-primary font-semibold mt-1">
                         Rp {product.price.toLocaleString('id-ID')}
                       </p>
                       <Button
@@ -439,7 +439,7 @@ export default function Cashier() {
         </div>
 
         {/* Right: Cart Section - Desktop */}
-        <div className="hidden md:block w-96 border-l bg-white p-4">
+        <div className="hidden md:block w-96 border-l bg-background p-4">
           <h2 className="text-xl font-bold mb-4">Keranjang</h2>
           <CartContent />
         </div>

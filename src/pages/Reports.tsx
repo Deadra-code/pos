@@ -42,6 +42,12 @@ export default function Reports() {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
+  const getChartColor = (index: number) => {
+    const el = document.documentElement;
+    const style = getComputedStyle(el);
+    return style.getPropertyValue(`--chart-${index + 1}`).trim() || COLORS[index % COLORS.length];
+  };
+
   useEffect(() => {
     loadTransactions();
   }, []);
@@ -165,11 +171,11 @@ export default function Reports() {
     URL.revokeObjectURL(url);
   };
 
-  const MetricCard = ({ title, value, icon: Icon, color }: { title: string; value: string; icon: any; color: string }) => (
+  const MetricCard = ({ title, value, icon: Icon, color }: { title: string; value: string; icon: React.ElementType; color: string }) => (
     <Card>
       <CardContent className="flex items-center p-6">
-        <div className={`p-3 rounded-lg ${color} mr-4`}>
-          <Icon className="w-6 h-6 text-white" />
+        <div className={`p-3 rounded-lg ${color.replace('bg-', 'bg-').replace('600', '100')} dark:${color.replace('bg-', 'bg-').replace('600', '900')}/20 mr-4`}>
+          <Icon className={`w-6 h-6 ${color.replace('bg-', 'text-')} dark:${color.replace('bg-', 'text-').replace('600', '400')}`} />
         </div>
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>
@@ -327,7 +333,7 @@ export default function Reports() {
                   <XAxis dataKey="hour" />
                   <YAxis />
                   <Tooltip formatter={(value: number | undefined) => `Rp ${(value || 0).toLocaleString('id-ID')}`} />
-                  <Bar dataKey="sales" fill="var(--color-chart-1)" />
+                  <Bar dataKey="sales" fill={`hsl(${getChartColor(0)})`} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -351,7 +357,7 @@ export default function Reports() {
                     dataKey="value"
                   >
                     {paymentData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={`hsl(${getChartColor(index)})`} />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value: number | undefined) => `Rp ${(value || 0).toLocaleString('id-ID')}`} />
@@ -466,8 +472,8 @@ export default function Reports() {
                         </TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded text-xs font-medium ${t.payment_method === 'TUNAI'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-blue-100 text-blue-800'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
                             }`}>
                             {t.payment_method}
                           </span>

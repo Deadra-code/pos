@@ -330,7 +330,7 @@ export default function MenuManagement() {
                             />
                           ) : (
                             <span
-                              className="cursor-pointer hover:text-blue-600 hover:underline"
+                              className="cursor-pointer hover:text-primary hover:underline"
                               onClick={() => handleQuickPriceEdit(product)}
                             >
                               Rp {product.price.toLocaleString('id-ID')}
